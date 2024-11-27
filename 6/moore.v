@@ -1,89 +1,38 @@
-module Moore(din,clk,reset,y);
-input din,clk,reset;
-output reg y;
-parameter S0=3'b000, S1=3'b001, S2=3'b010, S3=3'b011, S4=3'b100, S5=3'b101, S6=3'b110, S7=3'b111;
-reg [2:0] nextState;
-always @(posedge clk)
-begin
-if(reset)
-begin
-nextState=S0;
-y=0;
-end
-else
-begin
-case(nextState)
-S0:
-begin
-y=0;
-if(din==0)
-nextState=S1;
-else
-nextState=S0;
-end
-S1:
-begin
-y=0;
-if(din==0)
-nextState=S2;
-else
-nextState=S3;
-end
+module moore_fsm_counter (
+    input clk,       // Clock signal
+    input reset,     // Reset signal
+    output reg out   // Output signal (1 bit)
+);
+    // Declare 2-bit state
+    reg [1:0] state, next_state;  // 2-bit state register
 
-S2:
-begin
-y=0;
-if(din==0)
-nextState=S4;
-else
-nextState=S3;
-end
+    // State Transition Logic (Next-State Logic)
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= 2'b00;  // Reset to state 00
+        else
+            state <= next_state; // Transition to the next state
+    end
 
-S3:
-begin
-y=0;
-if(din==0)
-nextState=S5;
-else
-nextState=S0;
-end
+    // Output Logic (Moore FSM)
+    always @(state) begin
+        case (state)
+            2'b00: out = 0;  // State 00 -> Output is 0
+            2'b01: out = 0;  // State 01 -> Output is 0
+            2'b10: out = 1;  // State 10 -> Output is 1
+            2'b11: out = 0;  // State 11 -> Output is 0
+            default: out = 0; // Default case
+        endcase
+    end
 
-S4:
-begin
-y=0;
-if(din==0)
-nextState=S4;
-else
-nextState=S6;
-end
-S5:
-begin
-
-y=0;
-if(din==0)
-nextState=S2;
-else
-nextState=S7;
-end
-
-S6:
-begin
-y=1;
-if(din==0)
-nextState=S5;
-else
-nextState=S0;
-end
-
-S7:
-begin
-y=1;
-if(din==0)
-nextState=S5;
-else
-nextState=S0;
-end
-endcase
-end
-end
+    // Next-State Logic
+    always @(state) begin
+        case (state)
+            2'b00: next_state = 2'b01; // From state 00 -> 01
+            2'b01: next_state = 2'b10; // From state 01 -> 10
+            2'b10: next_state = 2'b11; // From state 10 -> 11
+            2'b11: next_state = 2'b00; // From state 11 -> 00 (wrap around)
+            default: next_state = 2'b00; // Default case
+        endcase
+    end
 endmodule
