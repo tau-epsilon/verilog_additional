@@ -1,60 +1,35 @@
-module tb_Mealy;
-
-	    // Testbench signals
-    reg din;
+module test_mealy_fsm_counter;
     reg clk;
     reg reset;
-    wire y;
-	Mealy uut(
-	.din(din),
+    wire out;
+
+    // Instantiate the Mealy FSM Counter
+    mealy_fsm_counter uut (
         .clk(clk),
         .reset(reset),
-        .y(y)
+        .out(out)
     );
 
-    // Clock generation (period = 10 time units)
-    always #5 clk = ~clk; // Toggle clock every 5 time units (period = 10)
+    // Clock generation
+    always begin
+        #5 clk = ~clk;  // Toggle the clock every 5 time units
+    end
 
-    // Stimulus generation
     initial begin
-        // Initialize inputs
+        // Initialize
         clk = 0;
-        reset = 0;
-        din = 0;
-	        // Apply reset
-        reset = 1;
-        #10 reset = 0;
-
-        // Test sequence: 001001
-        // Expected to detect sequence at the end
-        din = 0; #10;
-        din = 0; #10;
-        din = 1; #10;
-        din = 0; #10;
-        din = 0; #10;
-        din = 1; #10;
-
-        // Test another sequence
-        // Test sequence: 011
-        // Expected not to detect sequence
-        din = 0; #10;
-        din = 1; #10;
-        din = 1; #10;
-			        reset = 1; #10;
-        reset = 0;
-
-        // Test sequence: 010
-        // Expected not to detect sequence
-        din = 0; #10;
-        din = 1; #10;
-        din = 0; #10;
-
-        // Finish the simulation
+        reset = 1;   // Initially reset the FSM
+        
+        // Apply reset
+        #10 reset = 0;  // Deassert reset after 10 time units
+        
+        // Test sequence
+        #10;  // Check state 00
+        #10;  // Check state 01
+        #10;  // Check state 10 (output should be 1)
+        #10;  // Check state 11
+        #10;  // Check state 00 again (wrap around)
+        
+        #10 $stop;  // Stop the simulation
     end
-
-    // Monitor output
-    initial begin
-        $monitor("At time %t, din = %b, y = %b, nextState = %b", $time, din, y, uut.nextState);
-    end
-
 endmodule
