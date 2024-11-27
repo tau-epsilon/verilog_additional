@@ -1,61 +1,38 @@
-module tb_Moore;
+module moore_fsm_counter (
+    input clk,       // Clock signal
+    input reset,     // Reset signal
+    output reg out   // Output signal (1 bit)
+);
+    // Declare 2-bit state
+    reg [1:0] state, next_state;  // 2-bit state register
 
-    // Testbench signals
-    reg din;
-    reg clk;
-    reg reset;
-    wire y;
-
-    // Instantiate the SequenceDetectorMoore module
-    Moore uut (
-        .din(din),
-        .clk(clk),
-        .reset(reset),
-        .y(y)
-    );
-
-    // Clock generation (period = 10 time units)
-    always #5 clk = ~clk; // Toggle clock every 5 time units (period = 10)
-// Stimulus generation
-    initial begin
-        // Initialize inputs
-        clk = 0;
-        reset = 0;
-        din = 0;
-
-        // Apply reset
-        reset = 1;
-        #10 reset = 0;
-
-        // Test sequence: 001001
-        // Expected to detect sequence at the end
-        din = 0; #10;
-        din = 0; #10;
-        din = 1; #10;
-        din = 0; #10;
-        din = 0; #10;
-        din = 1; #10;
-		        // Test another sequence
-        // Test sequence: 011
-        // Expected not to detect sequence
-        din = 0; #10;
-        din = 1; #10;
-        din = 1; #10;
-
-        // Reset and test again
-        reset = 1; #10;
-        reset = 0;
-
-        // Test sequence: 010
-        // Expected not to detect sequence
-        din = 0; #10;
-        din = 1; #10;
-        din = 0; #10;
+    // State Transition Logic (Next-State Logic)
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= 2'b00;  // Reset to state 00
+        else
+            state <= next_state; // Transition to the next state
     end
 
-    // Monitor output
-    initial begin
-        $monitor("At time %t, din = %b, y = %b, nextState = %b", $time, din, y, uut.nextState);
+    // Output Logic (Moore FSM)
+    always @(state) begin
+        case (state)
+            2'b00: out = 0;  // State 00 -> Output is 0
+            2'b01: out = 0;  // State 01 -> Output is 0
+            2'b10: out = 1;  // State 10 -> Output is 1
+            2'b11: out = 0;  // State 11 -> Output is 0
+            default: out = 0; // Default case
+        endcase
     end
 
+    // Next-State Logic
+    always @(state) begin
+        case (state)
+            2'b00: next_state = 2'b01; // From state 00 -> 01
+            2'b01: next_state = 2'b10; // From state 01 -> 10
+            2'b10: next_state = 2'b11; // From state 10 -> 11
+            2'b11: next_state = 2'b00; // From state 11 -> 00 (wrap around)
+            default: next_state = 2'b00; // Default case
+        endcase
+    end
 endmodule
